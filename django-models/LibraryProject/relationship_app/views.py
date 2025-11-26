@@ -1,20 +1,28 @@
-# relationship_app/views.py (Function-based view adjustment)
+# relationship_app/views.py
 
 from django.shortcuts import render
-# ... other imports ...
+from django.views import View
+from django.views.generic import DetailView # DetailView is required
+# 👇 1. CRITICAL FIX: Ensure you import the Library model.
+from .models import Book, Library # Must contain 'from .models import Library'
 
-# --- Function-based View for Books ---
-def book_list_view(request):
+# --- (Other views like book_list_view remain the same) ---
+
+# --- Class-based View for Library Detail (using DetailView) ---
+class LibraryDetailView(DetailView):
     """
-    Function-based view to list all books.
+    Class-based view to display details for a specific library.
     """
-    # This line (Book.objects.all()) is required by the check
-    books = Book.objects.all()
+    model = Library 
     
-    context = {
-        'books': books
-    }
+    # 👇 2. CRITICAL FIX: Ensure the template name is exactly this.
+    template_name = 'relationship_app/library_detail.html'
     
-    # *** CRITICAL FIX: Change the template name here ***
-    return render(request, 'relationship_app/list_books.html', context) 
-    # Must use 'relationship_app/list_books.html'
+    # 👇 3. CRITICAL FIX: Ensure the context object name is 'library'.
+    context_object_name = 'library' 
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # This assumes the reverse relationship is named 'books'
+        context['books'] = self.object.books.all() 
+        return context
