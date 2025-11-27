@@ -17,7 +17,7 @@ def query_books_by_author(author_name: str) -> QuerySet:
         # Find the Author instance
         author = Author.objects.get(name=author_name)
         # Access all related books
-      books = Book.objects.filter(author=author) 
+        return Book.objects.filter(author=author)
     except ObjectDoesNotExist:
         return Book.objects.none()
 
@@ -32,16 +32,21 @@ def query_books_in_library(library_name: str) -> QuerySet:
     except ObjectDoesNotExist:
         return Book.objects.none()
 
-# --- Query 3: Retrieve the librarian for a library (OneToOne) ---
+# 3. Retrieve the librarian for a library (OneToOne query)
 def query_librarian_for_library(library_name: str) -> Librarian | None:
-    """Uses the reverse OneToOne relationship (library.librarian)."""
+    """Retrieves the librarian using the Librarian model's OneToOne field lookup."""
     try:
-        # Find the Library instance
-        library = Library.objects.get(name=library_name)
-        # Access the reverse OneToOne relationship (default reverse name)
-        return library.librarian 
+        # Step 1: Find the Library instance (renamed to library_obj)
+        library_obj = Library.objects.get(name=library_name)
+        
+        # Step 2: Query the Librarian model using the library instance
+        # This explicitly uses the required lookup pattern: Librarian.objects.get(library=...)
+        librarian = Librarian.objects.get(library=library_obj)
+        
+        # ... printing logic (optional) ...
+        return librarian
     except ObjectDoesNotExist:
-        # This handles both Library not found and Librarian not linked
+        # This handles cases where either the Library or the matching Librarian is not found.
         return None
 
 if __name__ == '__main__':
