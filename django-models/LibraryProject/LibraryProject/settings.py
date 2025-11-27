@@ -31,7 +31,6 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'relationship_app.apps.RelationshipAppConfig',
     'bookshelf.apps.BookshelfConfig',
     'books.apps.BooksConfig',  # Add this line
     'django.contrib.admin',
@@ -40,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'relationship_app.apps.RelationshipAppConfig',  # Add this line
 ]
 
 MIDDLEWARE = [
