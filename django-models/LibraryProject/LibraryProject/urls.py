@@ -14,11 +14,16 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-# relationship_app/urls.py
+# LibraryProject/urls.py
+from django.contrib import admin
+from django.urls import path, include # Make sure include is imported
 from django.urls import path
 from .views import book_list_view, LibraryDetailView
 
 urlpatterns = [
+    path('admin/', admin.site.urls),
+    # This line routes all /app/ traffic to relationship_app/urls.py
+    path('app/', include('relationship_app.urls')),
     # Route for the Function-based View (e.g., /app-name/books/)
     path('books/', book_list_view, name='book-list'),
     

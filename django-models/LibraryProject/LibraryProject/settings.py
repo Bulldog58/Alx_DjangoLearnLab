@@ -12,6 +12,13 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 
+# settings.py
+
+# URL to redirect to after successful login (can be any page, e.g., 'book-list')
+LOGIN_REDIRECT_URL = '/' 
+
+# URL to redirect to for login when required (e.g., when accessing a @login_required view)
+LOGIN_URL = 'login'
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 

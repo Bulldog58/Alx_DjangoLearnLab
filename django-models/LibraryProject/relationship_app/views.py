@@ -1,41 +1,35 @@
 # relationship_app/views.py
-from django.shortcuts import render
-from django.views.generic import ListView, DetailView # Or just import DetailView if you're only using that one
-from .models import Book, Library # CRITICAL: Imports both required models
-from django.views.generic.detail import DetailView
-# --- 1. Function-based View (for listing books) ---
-def book_list_view(request):
-    """
-    Lists all books using a function-based view.
-    Required to use Book.objects.all() and render 'relationship_app/list_books.html'.
-    """
-    books = Book.objects.all() # Required string: Book.objects.all()
-    
-    context = {
-        'books': books
-    }
-    
-    # Required template name for the check
-    return render(request, 'relationship_app/list_books.html', context)
 
-# --- 2. Class-based View (for library detail) ---
-class LibraryDetailView(DetailView):
-    """
-    Displays a specific Library's details and its books using DetailView.
-    Required strings: from .models import Library, 'relationship_app/library_detail.html', 'library'.
-    """
-    model = Library # Uses the imported Library model
-    
-    # Required template name for the check
-    template_name = 'relationship_app/library_detail.html' 
-    
-    # Required context name for the check
-    context_object_name = 'library' 
+from django.shortcuts import render, redirect
+from django.views import View # <-- Needed for the Class-Based View
+from django.contrib.auth.forms import UserCreationForm
+# from django.contrib.auth.decorators import login_required # (Can be added later)
 
-    def get_context_data(self, **kwargs):
-        # Calls the base implementation to get the Library object (self.object)
-        context = super().get_context_data(**kwargs)
+
+# 1. Registration View
+def register(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('login') 
+    else:
+        form = UserCreationForm()
         
-        # Adds the list of related books (assuming reverse related_name='books' on Book model)
-        context['books'] = self.object.books.all() 
-        return context
+    context = {'form': form}
+    return render(request, 'relationship_app/register.html', context)
+
+
+# 2. Function-Based View (list_books)
+def list_books(request):
+    # This is required because relationship_app/urls.py tries to import it.
+    # Replace the placeholder with your actual logic later.
+    return render(request, 'relationship_app/book_list.html', {'message': 'Book List View'})
+
+
+# 3. Class-Based View (LibraryDetailView)
+class LibraryDetailView(View):
+    # This is required because relationship_app/urls.py tries to import it.
+    # Replace the placeholder with your actual logic later.
+    def get(self, request, pk):
+        return render(request, 'relationship_app/book_detail.html', {'pk': pk, 'message': 'Book Detail View'})
