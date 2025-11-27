@@ -1,8 +1,8 @@
 # relationship_app/views.py
 from django.shortcuts import render
-from django.views.generic import DetailView
+from django.views.generic import ListView, DetailView # Or just import DetailView if you're only using that one
 from .models import Book, Library # CRITICAL: Imports both required models
-
+from django.views.generic.detail import DetailView
 # --- 1. Function-based View (for listing books) ---
 def book_list_view(request):
     """
