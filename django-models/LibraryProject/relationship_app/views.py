@@ -1,23 +1,27 @@
 # relationship_app/views.py
 
 from django.shortcuts import render, redirect
-from django.views import View # <-- Needed for the Class-Based View
+from django.views import View 
 from django.contrib.auth.forms import UserCreationForm
-# from django.contrib.auth.decorators import login_required # (Can be added later)
-
+from django.contrib.auth import login # <-- Add this import
 
 # 1. Registration View
 def register(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('login') 
+            user = form.save() # <-- Save the user object to a variable
+            login(request, user) # <-- Log the user in immediately
+            # Redirect them to the homepage or book list after successful login/registration
+            return redirect('book-list') # Assuming 'book-list' is a valid name
     else:
         form = UserCreationForm()
         
     context = {'form': form}
     return render(request, 'relationship_app/register.html', context)
+
+
+# ... (list_books and LibraryDetailView remain the same)
 
 
 # 2. Function-Based View (list_books)
