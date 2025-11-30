@@ -9,6 +9,46 @@ from django.contrib.auth.decorators import user_passes_test
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import permission_required
 from .models import Book
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required, permission_required
+from .models import Book # Import the model
+from django.http import HttpResponseForbidden # To handle permission denied messages
+
+# Placeholder for listing books (usually requires login, but not a custom permission)
+@login_required
+def book_list(request):
+    books = Book.objects.all()
+    return render(request, 'relationship_app/book_list.html', {'books': books})
+
+
+# 1. Protect Create View with 'can_create'
+@permission_required('relationship_app.can_create', raise_exception=True)
+def add_book(request):
+    # ... logic to handle form submission and saving new Book ...
+    return render(request, 'relationship_app/book_form.html', {'form': BookForm()})
+
+
+# 2. Protect Edit View with 'can_edit'
+@permission_required('relationship_app.can_edit', raise_exception=True)
+def edit_book(request, pk):
+    # book = get_object_or_404(Book, pk=pk)
+    # ... logic to handle form submission and updating Book ...
+    return render(request, 'relationship_app/book_form.html', {'form': BookForm()})
+
+
+# 3. Protect Delete View with 'can_delete'
+@permission_required('relationship_app.can_delete', raise_exception=True)
+def delete_book(request, pk):
+    # book = get_object_or_404(Book, pk=pk)
+    # ... logic to delete the Book ...
+    return redirect('book-list')
+    
+    
+# 4. Protect Detail View with 'can_view' (optional, but good for verification)
+@permission_required('relationship_app.can_view', raise_exception=True)
+def book_detail(request, pk):
+    # book = get_object_or_404(Book, pk=pk)
+    return render(request, 'relationship_app/book_detail.html', {'book': book})
 
 # --- Views Secured with Custom Permissions ---
 

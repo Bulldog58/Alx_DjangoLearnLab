@@ -4,6 +4,24 @@ from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+# Ensure the Book model is present and looks like this (with custom permissions added)
+class Book(models.Model):
+    title = models.CharField(max_length=200)
+    author = models.CharField(max_length=100)
+    publication_date = models.DateField(null=True, blank=True) # Added null/blank for flexibility
+
+    class Meta:
+        # Define the custom permissions here
+        permissions = [
+            ("can_view", "Can view book details"),
+            ("can_create", "Can add a new book entry"),
+            ("can_edit", "Can edit an existing book entry"),
+            ("can_delete", "Can delete a book entry"),
+        ]
+
+    def __str__(self):
+        return self.title
+    
 # Role choices for users
 ROLE_CHOICES = (
     ("Admin", "Admin"),

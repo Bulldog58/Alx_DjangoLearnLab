@@ -80,6 +80,9 @@ INSTALLED_APPS = [
     "bookshelf",
     "relationship_app",
     "users",
+    # ... Django defaults ...
+    
+    # Change 'users' (or whatever is incorrect) to the app name:
 ]
 
 MIDDLEWARE = [
