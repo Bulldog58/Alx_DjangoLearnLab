@@ -15,12 +15,13 @@ class CustomUserManager(UserManager):
     # ... (Your CustomUserManager definition) ...
     pass 
 
-class CustomUser(AbstractUser): # <-- Must be present
-    date_of_birth = models.DateField(null=True, blank=True) # <-- Must be present
-    profile_photo = models.ImageField(upload_to='profile_pics/', null=True, blank=True) # <-- Must be present
-    # ... (CustomUserManager and objects = CustomUserManager() should also be here)
+class CustomUser(AbstractUser):
+    # Custom fields required by the task
+    date_of_birth = models.DateField(null=True, blank=True)
+    profile_photo = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
     
-    # ... (rest of CustomUser model) ...
+    # Custom manager setup (also required)
+    objects = CustomUserManager()
 
 
 # --- Book Model (Missing piece) ---
