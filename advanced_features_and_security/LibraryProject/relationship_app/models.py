@@ -12,16 +12,17 @@ class UserProfile(models.Model):
     # ...
 
 class CustomUserManager(UserManager):
-    # ... (Your CustomUserManager definition) ...
-    pass 
+    def create_user(self, username, email=None, password=None, **extra_fields):
+        # ... logic to create standard user ...
+        pass
+
+    def create_superuser(self, username, email=None, password=None, **extra_fields):
+        # ... logic to set superuser flags and call create_user ...
+        pass
 
 class CustomUser(AbstractUser):
-    # Custom fields required by the task
-    date_of_birth = models.DateField(null=True, blank=True)
-    profile_photo = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
-    
-    # Custom manager setup (also required)
-    objects = CustomUserManager()
+    # ... fields ...
+    objects = CustomUserManager() # <-- This assignment is critical
 
 
 # --- Book Model (Missing piece) ---
