@@ -10,15 +10,15 @@ class UserProfile(models.Model):
     # This must use the setting, which uses the correct capitalization
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE) 
     # ...
-    
+
 class CustomUserManager(UserManager):
     # ... (Your CustomUserManager definition) ...
     pass 
 
-class CustomUser(AbstractUser):
-    # This field MUST be defined and spelled correctly
-    date_of_birth = models.DateField(null=True, blank=True) 
-    profile_photo = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
+class CustomUser(AbstractUser): # <-- Must be present
+    date_of_birth = models.DateField(null=True, blank=True) # <-- Must be present
+    profile_photo = models.ImageField(upload_to='profile_pics/', null=True, blank=True) # <-- Must be present
+    # ... (CustomUserManager and objects = CustomUserManager() should also be here)
     
     # ... (rest of CustomUser model) ...
 
