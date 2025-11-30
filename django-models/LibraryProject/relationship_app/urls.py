@@ -1,5 +1,7 @@
 # relationship_app/urls.py
 
+# Ensure 'member_view' is in the imports at the top
+from .views import ..., member_view
 from django.urls import path
 from .views import list_books, LibraryDetailView, register, admin_view, librarian_view, member_view # <-- FIX: Add the three views here
 from django.contrib.auth import views as auth_views
@@ -11,6 +13,9 @@ urlpatterns = [
     path('admin-dashboard/', admin_view, name='admin-dashboard'),
     path('librarian-panel/', librarian_view, name='librarian-panel'),
     path('member-area/', member_view, name='member-area'),
+    
+    # URL for the 'Member' view
+    path('member-area/', member_view, name='member-area'), # <-- Links to the function
     
     # Application Views
     path('books/', list_books, name='book-list'),
