@@ -1,13 +1,19 @@
 # relationship_app/urls.py
 
-# Ensure 'member_view' is in the imports at the top
-from .views import ..., member_view
 from django.urls import path
-from .views import list_books, LibraryDetailView, register, admin_view, librarian_view, member_view # <-- FIX: Add the three views here
 from django.contrib.auth import views as auth_views
+from .views import (
+    list_books, LibraryDetailView, register, admin_view, librarian_view,
+    member_view, add_book, edit_book, delete_book
+)
 
 urlpatterns = [
     # ... (Existing paths: books/, register/, login/, logout/) ...
+
+# --- Secured Book CRUD URLs ---
+    path('books/add/', add_book, name='book-add'),
+    path('books/<int:pk>/edit/', edit_book, name='book-edit'),
+    path('books/<int:pk>/delete/', delete_book, name='book-delete'),
 
     # --- Role-Based Access URLs ---
     path('admin-dashboard/', admin_view, name='admin-dashboard'),
@@ -16,7 +22,7 @@ urlpatterns = [
     
     # URL for the 'Member' view
     path('member-area/', member_view, name='member-area'), # <-- Links to the function
-    
+
     # Application Views
     path('books/', list_books, name='book-list'),
     path('books/<int:pk>/', LibraryDetailView.as_view(), name='book-detail'),

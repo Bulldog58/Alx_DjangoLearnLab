@@ -5,6 +5,25 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+class Book(models.Model):
+    title = models.CharField(max_length=200)
+    author = models.CharField(max_length=100)
+    publication_date = models.DateField()
+    # ... (other Book fields) ...
+
+    class Meta:
+        # Define your custom permissions here
+        permissions = [
+            ("can_add_book", "Can add a new book entry"),
+            ("can_change_book", "Can edit an existing book entry"),
+            ("can_delete_book", "Can delete a book entry"),
+        ]
+        # Make sure to include the app_label if you are not in a model file
+        # or if it's named differently, but generally not needed here.
+
+    def __str__(self):
+        return self.title
+    
 # Define the user roles for clarity and reusability
 class UserProfile(models.Model):
     # Role choices
