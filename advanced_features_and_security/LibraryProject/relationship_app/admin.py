@@ -3,14 +3,16 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import CustomUser # Import your custom user model
+from .models import Book
 
+admin.site.register(Book)
 # Define the CustomUserAdmin class
 class CustomUserAdmin(UserAdmin):
     # This list defines the columns in the Admin list view
     list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'date_of_birth') # <-- Check this line!
     
     # ... (rest of the class) ...
-    
+
     # Add new fields to the list of fields displayed on the change list page
     list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'date_of_birth')
 
