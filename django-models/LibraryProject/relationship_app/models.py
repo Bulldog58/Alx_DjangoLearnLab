@@ -1,55 +1,41 @@
 # relationship_app/models.py
+
 from django.db import models
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
-class Author(models.Model):
-    """
-    Model for the Author. One Author to Many Books.
-    """
-    name = models.CharField(max_length=100)
-    
-    def __str__(self):
-        return self.name
-
-class Book(models.Model):
-    """
-    Model for the Book. Contains the ForeignKey to Author.
-    """
-    title = models.CharField(max_length=200)
-    
-    # 🔑 ForeignKey (One-to-Many): A Book must have one Author.
-    author = models.ForeignKey(
-        Author, 
-        on_delete=models.CASCADE, 
-        related_name='books' # Allows querying author.books.all()
+# Define the user roles for clarity and reusability
+class UserProfile(models.Model):
+    # Role choices
+    ROLE_CHOICES = (
+        ('Admin', 'Admin'),
+        ('Librarian', 'Librarian'),
+        ('Member', 'Member'),
     )
-    
-    def __str__(self):
-        return self.title
 
-class Library(models.Model):
-    """
-    Model for the Library. Participates in ManyToMany (Books) and OneToOne (Librarian).
-    """
-    name = models.CharField(max_length=100)
+    # Link to the built-in User model (one-to-one relationship)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     
-    # 📚 ManyToManyField: Links to Book. A Library has many Books, a Book is in many Libraries.
-    books = models.ManyToManyField(Book, related_name='libraries')
-    
-    def __str__(self):
-        return self.name
+    # Role field with predefined choices, defaults to 'Member'
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='Member')
 
-class Librarian(models.Model):
-    """
-    Model for the Librarian. Contains the OneToOneField to Library.
-    """
-    name = models.CharField(max_length=100)
-    
-    # 👤 OneToOneField: Links to Library. Ensures one Librarian per Library.
-    library = models.OneToOneField(
-        Library, 
-        on_delete=models.CASCADE, 
-        primary_key=True # Makes Librarian's primary key the same as the Library's primary key
-    )
-    
     def __str__(self):
-        return f"{self.name} ({self.library.name})"
+        return f'{self.user.username} - {self.role}'
+
+
+# Signal to automatically create UserProfile when a User is created
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        # Default the role to 'Member'
+        UserProfile.objects.create(user=instance, role='Member')
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    # Ensure the UserProfile is saved when the User is saved
+    try:
+        instance.userprofile.save()
+    except UserProfile.DoesNotExist:
+        # Handle case where a User might exist without a profile (e.g., initial superuser)
+        UserProfile.objects.create(user=instance, role='Member')
