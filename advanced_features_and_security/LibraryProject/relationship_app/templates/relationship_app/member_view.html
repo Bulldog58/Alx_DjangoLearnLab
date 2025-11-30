@@ -1,0 +1,4 @@
+<h2>Member Area</h2>
+<p>Welcome, {{ request.user.username }}! You can view and reserve books.</p>
+<p>Your current role is: {{ role }}</p>
+<p><a href="{% url 'logout' %}">Logout</a></p>
