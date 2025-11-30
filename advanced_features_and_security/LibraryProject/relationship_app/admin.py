@@ -8,13 +8,16 @@ from .models import Book
 admin.site.register(Book)
 # Define the CustomUserAdmin class
 class CustomUserAdmin(UserAdmin):
-    # This list defines the columns in the Admin list view
-    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'date_of_birth') # <-- Check this line!
+    # Add new fieldset for custom fields
+    fieldsets = UserAdmin.fieldsets + (
+        ('Custom Profile Info', {'fields': ('date_of_birth', 'profile_photo')}),
+    )
     
-    # ... (rest of the class) ...
-
-    # Add new fields to the list of fields displayed on the change list page
+    # Optional: Add custom fields to the list view column
     list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'date_of_birth')
+
+# Register the model with the custom admin class
+admin.site.register(CustomUser, CustomUserAdmin)
 
 
 # Unregister the default User model if it was ever registered
