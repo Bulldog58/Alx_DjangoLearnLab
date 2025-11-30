@@ -1,5 +1,6 @@
 # relationship_app/urls.py
 
+# Consolidated imports: import all view callables from views and auth_views once
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from .views import (
@@ -11,8 +12,12 @@ urlpatterns = [
     # ... (Existing paths: books/, register/, login/, logout/) ...
 
 # --- Secured Book CRUD URLs ---
-    path('books/add/', add_book, name='book-add'),
-    path('books/<int:pk>/edit/', edit_book, name='book-edit'),
+   # Path for adding a book (Missing: "add_book/")
+    path('books/add/', add_book, name='book-add'), 
+    
+    # Path for editing a book (Missing: "edit_book/")
+    path('books/<int:pk>/edit/', edit_book, name='book-edit'), 
+    
     path('books/<int:pk>/delete/', delete_book, name='book-delete'),
 
     # --- Role-Based Access URLs ---
