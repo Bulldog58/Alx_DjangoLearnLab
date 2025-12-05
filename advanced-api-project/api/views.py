@@ -1,9 +1,8 @@
-from rest_framework import generics, permissions
+from rest_framework import generics, filters # <-- Import 'filters' here
 from django_filters.rest_framework import DjangoFilterBackend
-from django_filters import rest_framework as filters
-from rest_framework.filters import SearchFilter, OrderingFilter  
 from .models import Book
 from .serializers import BookSerializer
+from .filters import BookFilter
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 
 class ListView(generics.ListCreateAPIView):
