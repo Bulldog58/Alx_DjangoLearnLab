@@ -1,0 +1,20 @@
+<h3>Comments</h3>
+<div>
+    {% for comment in comments %}
+        <div>
+            <p>{{ comment.author.username }}: {{ comment.content }}</p>
+            <p>{{ comment.created_at }}</p>
+            {% if comment.author == request.user %}
+                <a href="{% url 'edit_comment' pk=comment.pk %}">Edit</a>
+                <a href="{% url 'delete_comment' pk=comment.pk %}">Delete</a>
+            {% endif %}
+        </div>
+    {% endfor %}
+</div>
+
+<h4>Add a Comment</h4>
+<form method="POST">
+    {% csrf_token %}
+    {{ comment_form.as_p }}
+    <button type="submit">Post Comment</button>
+</form>
