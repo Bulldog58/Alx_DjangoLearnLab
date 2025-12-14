@@ -33,15 +33,10 @@ class User(AbstractUser):
         verbose_name_plural = 'Users'
 
 class CustomUser(AbstractUser):
-    # Additional fields defined previously
-    bio = models.TextField(max_length=500, blank=True)
-    profile_picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
-
-    # Many-to-Many field for followers (already fine)
     followers = models.ManyToManyField(
         'self',
         symmetrical=False,
-        related_name='following',
+        related_name='following', # 'following' is the reverse accessor, meaning UserA.following.all() lists who UserA follows.
         blank=True
     )
 

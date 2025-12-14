@@ -2,18 +2,19 @@
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import PostViewSet, CommentViewSet
+from .views import PostViewSet, CommentViewSet, FeedView # Import FeedView
 
 router = DefaultRouter()
 router.register(r'posts', PostViewSet, basename='post')
-# Register the comment viewset for independent management (e.g., /comments/1/ for detail)
 router.register(r'comments', CommentViewSet, basename='comment')
 
 urlpatterns = [
-    # Top-level routes for posts and independent comments (e.g., /api/v1/posts/)
+    # Feed endpoint
+    path('feed/', FeedView.as_view(), name='user-feed'), # <-- New Feed route
+    
+    # Top-level routes for posts and independent comments
     path('', include(router.urls)), 
 
-    # Nested route for creating/listing comments under a post (e.g., /api/v1/posts/1/comments/)
-    # Uses the custom 'comments' action defined in PostViewSet
+    # Nested route for comments
     path('posts/<int:post_pk>/comments/', CommentViewSet.as_view({'get': 'list', 'post': 'create'}), name='post-comments-list'),
 ]

@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from .models import Post, Comment
 from .serializers import PostSerializer, CommentSerializer
 from .permissions import IsAuthorOrReadOnly
+from rest_framework import generics
 
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
@@ -49,3 +50,22 @@ class CommentViewSet(viewsets.ModelViewSet):
         post_pk = self.kwargs.get('post_pk')
         post = Post.objects.get(pk=post_pk)
         serializer.save(author=self.request.user, post=post)
+ 
+class FeedView(generics.ListAPIView):
+    """
+    Returns a personalized feed of posts from users the current user follows.
+    """
+    serializer_class = PostSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    # Step 5: Pagination and Filtering are inherited from settings
+
+    def get_queryset(self):
+        # 1. Get the list of users the current user is following
+        followed_users = self.request.user.following.all()
+        
+        # 2. Filter posts to include only those authored by the followed users
+        #    and order them by creation date (most recent first)
+        queryset = Post.objects.filter(author__in=followed_users).order_by('-created_at')
+        
+        return queryset        

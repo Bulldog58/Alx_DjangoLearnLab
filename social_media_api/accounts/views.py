@@ -60,3 +60,49 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
     # The user can only view/edit their own profile
     def get_object(self):
         return self.request.user
+
+class UserProfileViewSet(viewsets.ModelViewSet):
+    # This viewset is for managing the user profile, including follow actions.
+    queryset = UserModel.objects.all()
+    serializer_class = UserProfileSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    # Override list/retrieve to ensure fields are correct
+    def get_object(self):
+        # Allow users to retrieve their own profile or any other user's profile
+        if self.action in ['retrieve', 'update', 'partial_update']:
+            # For detail actions, we use the primary key from the URL or the current user
+            lookup_field = self.kwargs.get('pk')
+            if lookup_field:
+                return self.get_queryset().get(pk=lookup_field)
+            return self.request.user
+        return self.request.user # Default to the current user
+
+    # Custom action to follow a user (POST /api/v1/auth/users/{pk}/follow/)
+    @action(detail=True, methods=['post'])
+    def follow(self, request, pk=None):
+        target_user = self.get_object()
+        current_user = request.user
+
+        if current_user == target_user:
+            return Response({"detail": "You cannot follow yourself."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Add target_user to the current user's 'following' set
+        # The 'following' set is managed via the 'followers' M2M field
+        current_user.following.add(target_user)
+        
+        return Response({"detail": f"You are now following {target_user.username}."}, status=status.HTTP_200_OK)
+
+    # Custom action to unfollow a user (POST /api/v1/auth/users/{pk}/unfollow/)
+    @action(detail=True, methods=['post'])
+    def unfollow(self, request, pk=None):
+        target_user = self.get_object()
+        current_user = request.user
+
+        if current_user == target_user:
+            return Response({"detail": "Invalid operation."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Remove target_user from the current user's 'following' set
+        current_user.following.remove(target_user)
+        
+        return Response({"detail": f"You have unfollowed {target_user.username}."}, status=status.HTTP_200_OK)
