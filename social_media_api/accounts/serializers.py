@@ -1,22 +1,31 @@
-# accounts/serializers.py
-
 from rest_framework import serializers
-from .models import User
-from django.contrib.auth import authenticate
+from django.contrib.auth import get_user_model, authenticate
+from rest_framework.authtoken.models import Token
 
-# --- 1. Registration Serializer ---
-class UserRegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
-    
+UserModel = get_user_model()
+
+# 1. Registration Serializer (Creates a new user)
+class UserRegistrationSerializer(serializers.ModelSerializer):
+    password2 = serializers.CharField(style={'input_type': 'password'}, write_only=True)
+
     class Meta:
-        model = User
-        # Include fields required for registration
-        fields = ('id', 'username', 'email', 'password', 'bio')
-        extra_kwargs = {'email': {'required': True}}
+        model = UserModel
+        fields = ('username', 'email', 'password', 'password2', 'bio')
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'email': {'required': True},
+            'bio': {'required': False},
+        }
+
+    def validate(self, data):
+        # Ensure passwords match
+        if data['password'] != data['password2']:
+            raise serializers.ValidationError({"password": "Password fields didn't match."})
+        return data
 
     def create(self, validated_data):
-        # Use create_user to ensure password hashing
-        user = User.objects.create_user(
+        # Securely create the user using the create_user method
+        user = UserModel.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
             password=validated_data['password'],
@@ -24,45 +33,36 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         )
         return user
 
-# --- 2. Login Serializer ---
+
+# 2. Login Serializer (Authenticates user and retrieves token)
 class UserLoginSerializer(serializers.Serializer):
-    username = serializers.CharField(required=True)
-    password = serializers.CharField(required=True, write_only=True)
+    username = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+    token = serializers.CharField(read_only=True)
 
     def validate(self, data):
-        username = data.get('username')
-        password = data.get('password')
+        username = data.get("username")
+        password = data.get("password")
 
         if username and password:
+            # Authenticate credentials
             user = authenticate(username=username, password=password)
-            if user:
-                if user.is_active:
-                    data['user'] = user
-                    return data
-                else:
-                    raise serializers.ValidationError("User account is disabled.")
-            else:
-                raise serializers.ValidationError("Incorrect credentials.")
+            if not user:
+                raise serializers.ValidationError("Invalid credentials.")
         else:
             raise serializers.ValidationError("Must include 'username' and 'password'.")
 
-# --- 3. User Profile Serializer (for GET /profile) ---
+        # Get or create the token for the user
+        token, created = Token.objects.get_or_create(user=user)
+
+        data['token'] = token.key
+        data['user'] = user # Attach user object to validated data
+        return data
+
+
+# 3. Profile Serializer (Used for fetching or updating profile data)
 class UserProfileSerializer(serializers.ModelSerializer):
-    # Count followers/following dynamically
-    followers_count = serializers.SerializerMethodField()
-    following_count = serializers.SerializerMethodField()
-    
     class Meta:
-        model = User
-        fields = [
-            'id', 'username', 'email', 'bio', 'profile_picture', 
-            'date_joined', 'followers_count', 'following_count'
-        ]
-        read_only_fields = ['username', 'email', 'date_joined']
-
-    def get_followers_count(self, obj):
-        return obj.followers.count()
-
-    def get_following_count(self, obj):
-        return obj.following.count()
-    
+        model = UserModel
+        fields = ('id', 'username', 'email', 'bio', 'profile_picture', 'followers', 'following')
+        read_only_fields = ('username', 'email', 'followers', 'following') # Only bio/pic is editable

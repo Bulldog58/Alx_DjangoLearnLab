@@ -48,6 +48,7 @@ INSTALLED_APPS = [
 
 # Set the custom user model (Crucial for Django to know which model to use)
 AUTH_USER_MODEL = 'accounts.User'
+AUTH_USER_MODEL = 'accounts.CustomUser'
 
 # Configure DRF to use Token Authentication globally (or per-view)
 REST_FRAMEWORK = {
