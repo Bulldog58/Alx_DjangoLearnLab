@@ -44,6 +44,9 @@ INSTALLED_APPS = [
     # Project apps
     'accounts',
     'posts',
+    'notifications',
+    'storages',
+    
 ]
 
 # Set the custom user model (Crucial for Django to know which model to use)

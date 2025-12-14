@@ -1,14 +1,9 @@
-from rest_framework import viewsets, permissions, generics, status
-from .models import Notification, Post, Comment, Like
-from .serializers import PostSerializer, CommentSerializer
-from rest_framework.permissions import IsAuthenticated
+from .models import Post, Comment, Like
+from notifications.utils import create_notification
+from rest_framework import viewsets, permissions, filters, status 
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
-from django.contrib.contenttypes.models import ContentType
-from rest_framework.exceptions import NotFound
-
 
 User = get_user_model()
 
