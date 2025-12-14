@@ -41,9 +41,9 @@ INSTALLED_APPS = [
     'rest_framework',
     # 🛑 CRITICAL FIX: Ensure this is correctly separated.
     'rest_framework.authtoken',  # Token Authentication App
-    
     # Project apps
     'accounts',
+    'posts',
 ]
 
 # Set the custom user model (Crucial for Django to know which model to use)
@@ -52,12 +52,15 @@ AUTH_USER_MODEL = 'accounts.CustomUser'
 
 # Configure DRF to use Token Authentication globally (or per-view)
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
-    ],
-    'DEFAULT_PERMISSION_CLASSES': [
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication', 
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
-    ]
+    ),
+    # Add Pagination Configuration
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10 # Display 10 items per page by default
 }
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
