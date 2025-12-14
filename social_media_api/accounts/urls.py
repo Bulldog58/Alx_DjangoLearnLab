@@ -10,7 +10,7 @@ from .views import (
 
 # New router for the UserProfileViewSet
 user_router = DefaultRouter()
-user_router.register(r'users', UserProfileViewSet, basename='user') # e.g., /api/v1/auth/users/
+user_router.register(r'users', UserProfileViewSet, basename='user')
 
 urlpatterns = [
     # Existing routes
