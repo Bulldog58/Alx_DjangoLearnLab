@@ -1,71 +1,147 @@
-# posts/views.py
-
-from rest_framework import viewsets, permissions, filters
+from rest_framework import viewsets, permissions, generics, status
+from .models import Notification, Post, Comment, Like
+from .serializers import PostSerializer, CommentSerializer
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Post, Comment
-from .serializers import PostSerializer, CommentSerializer
-from .permissions import IsAuthorOrReadOnly
-from rest_framework import generics
+from rest_framework.views import APIView
+from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
+from rest_framework.exceptions import NotFound
+
+
+User = get_user_model()
+
 
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
-    
-    # Step 5: Filtering
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['title', 'content', 'author__username']
+    permission_classes = [permissions.IsAuthenticated]
 
-    # Step 5: Pagination will be applied globally or via custom settings
+    @action(detail=True, methods=["post"])
+    def like(self, request, pk=None):
+        # Use generics.get_object_or_404 for retrieving the post
+        post = generics.get_object_or_404(Post, pk=pk)
 
-    def perform_create(self, serializer):
-        # Automatically set the author to the currently logged-in user
-        serializer.save(author=self.request.user)
-    
-    # Custom action to list comments on a specific post
-    @action(detail=True, methods=['get'])
-    def comments(self, request, pk=None):
-        post = self.get_object()
-        comments = post.comments.all()
-        serializer = CommentSerializer(comments, many=True, context={'request': request})
-        # Note: Pagination would ideally be applied here too
-        return Response(serializer.data)
+        # Use get_or_create to ensure a like is created only if it doesn't exist
+        like, created = Like.objects.get_or_create(user=request.user, post=post)
+        if not created:
+            return Response({"detail": "You have already liked this post."}, status=400)
+
+        # Create a notification for the post author
+        Notification.objects.create(
+            recipient=post.author,
+            actor=request.user,
+            verb="liked your post",
+            target_content_type=ContentType.objects.get_for_model(Post),
+            target_object_id=post.id,
+        )
+
+        return Response({"detail": "Post liked successfully"}, status=200)
+
+    @action(detail=True, methods=["post"])
+    def unlike(self, request, pk=None):
+        # Use generics.get_object_or_404 for retrieving the post
+        post = generics.get_object_or_404(Post, pk=pk)
+
+        # Check if the user has liked the post
+        like = Like.objects.filter(post=post, user=request.user).first()
+        if not like:
+            return Response({"detail": "You haven't liked this post."}, status=400)
+
+        # Delete the like
+        like.delete()
+
+        # Optionally, delete the notification
+        Notification.objects.filter(
+            recipient=post.author,
+            actor=request.user,
+            verb="liked your post",
+            target_content_type=ContentType.objects.get_for_model(Post),
+            target_object_id=post.id,
+        ).delete()
+
+        return Response({"detail": "Post unliked successfully"}, status=200)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
-    
-    def get_queryset(self):
-        # Only return comments for the post specified in the URL (if used with nested routing)
-        post_pk = self.kwargs.get('post_pk')
-        if post_pk:
-            return Comment.objects.filter(post_id=post_pk).order_by('created_at')
-        return Comment.objects.all()
 
-    def perform_create(self, serializer):
-        # Automatically set the author and post
-        post_pk = self.kwargs.get('post_pk')
-        post = Post.objects.get(pk=post_pk)
-        serializer.save(author=self.request.user, post=post)
- 
-class FeedView(generics.ListAPIView):
-    """
-    Returns a personalized feed of posts from users the current user follows.
-    """
-    serializer_class = PostSerializer
+
+class PostFeedView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Get the current user
+        user = request.user
+
+        # Get the list of users that the current user is following
+        following_users = user.following.all()
+
+        # Fetch posts from the followed users, ordered by creation date (most recent first)
+        posts = Post.objects.filter(author__in=following_users).order_by("-created_at")
+
+        # Serialize the posts
+        serializer = PostSerializer(posts, many=True)
+
+        return Response(serializer.data)
+
+
+class LikePostView(APIView):
     permission_classes = [permissions.IsAuthenticated]
-    
-    # Step 5: Pagination and Filtering are inherited from settings
 
-    def get_queryset(self):
-        # 1. Get the list of users the current user is following
-        followed_users = self.request.user.following.all()
-        
-        # 2. Filter posts to include only those authored by the followed users
-        #    and order them by creation date (most recent first)
-        queryset = Post.objects.filter(author__in=followed_users).order_by('-created_at')
-        
-        return queryset        
+    def post(self, request, pk):
+        # Use generics.get_object_or_404 for retrieving the post
+        post = generics.get_object_or_404(Post, pk=pk)
+
+        user = request.user
+
+        # Prevent users from liking their own posts
+        if post.author == user:
+            return Response(
+                {"detail": "You cannot like your own post."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Ensure a like is created only if it doesn't exist
+        like, created = Like.objects.get_or_create(user=user, post=post)
+        if not created:
+            return Response(
+                {"detail": "You already liked this post."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Create a notification for the post author
+        Notification.objects.create(
+            recipient=post.author, actor=user, verb="liked your post", target=post
+        )
+
+        return Response(
+            {"detail": "Post liked successfully."}, status=status.HTTP_201_CREATED
+        )
+
+
+class UnlikePostView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        # Use generics.get_object_or_404 for retrieving the post
+        post = generics.get_object_or_404(Post, pk=pk)
+
+        user = request.user
+
+        # Ensure the user has liked the post
+        like = Like.objects.filter(post=post, user=user).first()
+        if not like:
+            return Response(
+                {"detail": "You haven't liked this post."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Delete the like
+        like.delete()
+
+        return Response(
+            {"detail": "Post unliked successfully."}, status=status.HTTP_204_NO_CONTENT
+        )

@@ -1,20 +1,19 @@
-# posts/urls.py
-
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import PostViewSet, CommentViewSet, FeedView # Import FeedView
+from .views import LikePostView, PostViewSet, CommentViewSet, PostFeedView, UnlikePostView
+
 
 router = DefaultRouter()
-router.register(r'posts', PostViewSet, basename='post')
-router.register(r'comments', CommentViewSet, basename='comment')
+router.register(r"posts", PostViewSet)
+router.register(r"comments", CommentViewSet)
 
 urlpatterns = [
-    # Feed endpoint
-    path('feed/', FeedView.as_view(), name='user-feed'), # <-- New Feed route
-    
-    # Top-level routes for posts and independent comments
-    path('', include(router.urls)), 
+    path("", include(router.urls)),
+    path("feed/", PostFeedView.as_view(), name="post_feed"),
 
-    # Nested route for comments
-    path('posts/<int:post_pk>/comments/', CommentViewSet.as_view({'get': 'list', 'post': 'create'}), name='post-comments-list'),
+
+    # URLs for like and unlike actions
+    path('posts/<int:pk>/like/', PostViewSet.as_view({'post': 'like'}), name='like_post'),
+    path('posts/<int:pk>/unlike/', PostViewSet.as_view({'post': 'unlike'}), name='unlike_post'),
+    path('notifications/', include('notifications.urls')),  # Add notifications URLs
 ]
